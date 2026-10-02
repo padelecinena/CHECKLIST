@@ -72,6 +72,7 @@ const state = {
 const homeScreen = document.getElementById("homeScreen");
 const inspectionScreen = document.getElementById("inspectionScreen");
 const historyScreen = document.getElementById("historyScreen");
+const analysisScreen = document.getElementById("analysisScreen");
 const checklist = document.getElementById("checklist");
 const vehicleNumber = document.getElementById("vehicleNumber");
 const vehicleError = document.getElementById("vehicleError");
@@ -481,7 +482,7 @@ function resetInspection() {
 }
 
 function showScreen(screen) {
-  [homeScreen, inspectionScreen, historyScreen].forEach(item => item.classList.remove("active"));
+  [homeScreen, inspectionScreen, historyScreen, analysisScreen].forEach(item => item.classList.remove("active"));
   screen.classList.add("active");
 
   if (screen === homeScreen) {
@@ -505,12 +506,21 @@ document.getElementById("historyBtn").addEventListener("click", async () => {
   await loadHistory();
 });
 
+document.getElementById("defectsAnalysisBtn")?.addEventListener("click", async () => {
+  showScreen(analysisScreen);
+  await loadDashboard();
+});
+
 document.getElementById("backHomeBtn").addEventListener("click", () => {
   resetInspection();
   showScreen(homeScreen);
 });
 
 document.getElementById("backHistoryBtn").addEventListener("click", () => {
+  showScreen(homeScreen);
+});
+
+document.getElementById("backAnalysisBtn")?.addEventListener("click", () => {
   showScreen(homeScreen);
 });
 
@@ -879,4 +889,3 @@ document.getElementById("cancelRemoveControlBtn")?.addEventListener("click", clo
 
 renderChecklist();
 updateSummary();
-loadDashboard();
