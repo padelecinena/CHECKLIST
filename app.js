@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, serverTimestamp, getDocs, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAm64KiQ4kF5z0TcM-npVFUja6umeoDyxU",
@@ -634,6 +634,28 @@ function populateHistoryDateFilter() {
   }
 }
 
+async function deleteHistoryRecord(recordId, vehicleNumber) {
+  const confirmed = window.confirm(`¿Quieres borrar la inspección del vehículo ${vehicleNumber || "—"}?\n\nEsta acción eliminará el registro de Firebase y también lo quitará del gráfico.`);
+  if (!confirmed) return;
+
+  try {
+    await deleteDoc(doc(db, "inspecciones", recordId));
+
+    historyRecords = historyRecords.filter(record => record.id !== recordId);
+    dashboardRecords = dashboardRecords.filter(record => record.id !== recordId);
+
+    populateHistoryDateFilter();
+    renderFilteredHistory();
+    populateDashboardDateFilter();
+    renderDashboard();
+
+    showToast(`Inspección del vehículo ${vehicleNumber || "—"} eliminada.`);
+  } catch (error) {
+    console.error("Error eliminando inspección:", error);
+    showToast("No se pudo borrar la inspección. Revisa los permisos de Firebase.");
+  }
+}
+
 function renderFilteredHistory() {
   const container = document.getElementById("historyList");
   const dateFilter = document.getElementById("historyDateFilter");
@@ -691,7 +713,16 @@ function renderFilteredHistory() {
             <strong>Vehículo ${data.vehiculo || "—"}</strong>
             <div class="history-date">${date}</div>
           </div>
-          <span class="status-pill ${status === "OK" ? "green" : "red"}">${status}</span>
+          <div class="history-card-actions">
+            <span class="status-pill ${status === "OK" ? "green" : "red"}">${status}</span>
+            <button
+              type="button"
+              class="history-delete-btn"
+              title="Borrar inspección"
+              aria-label="Borrar inspección del vehículo ${escapeHtml(data.vehiculo || "—")}"
+              data-delete-history="${record.id}"
+            >🗑️</button>
+          </div>
         </div>
 
         ${nokDetails ? `
@@ -702,6 +733,14 @@ function renderFilteredHistory() {
       </article>
     `;
   }).join("");
+
+  container.querySelectorAll("[data-delete-history]").forEach(button => {
+    button.addEventListener("click", () => {
+      const record = historyRecords.find(item => item.id === button.dataset.deleteHistory);
+      if (!record) return;
+      deleteHistoryRecord(record.id, record.data.vehiculo);
+    });
+  });
 }
 let dashboardRecords = [];
 
