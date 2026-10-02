@@ -96,10 +96,35 @@
           </div>
         </div>
 
-        <div class="empty-history">
-          <div class="empty-icon">▤</div>
-          <h3>Aún no hay inspecciones</h3>
-          <p>Cuando conectemos Firebase, aquí aparecerán las inspecciones guardadas y podremos añadir filtros y gráficos.</p>
+        <div class="history-filters">
+          <div class="history-filter-field">
+            <label for="historyDateFilter">Filtrar por día</label>
+            <select id="historyDateFilter">
+              <option value="">Todos los días</option>
+            </select>
+          </div>
+
+          <div class="history-filter-field history-search-field">
+            <label for="historyVehicleSearch">Buscar número BDG</label>
+            <input
+              id="historyVehicleSearch"
+              type="text"
+              inputmode="numeric"
+              placeholder="Escribe el número BDG..."
+              autocomplete="off"
+            >
+          </div>
+
+          <button type="button" class="history-clear-btn" id="clearHistoryFilters">
+            Limpiar filtros
+          </button>
+        </div>
+
+        <div id="historyList" class="history-list">
+          <div class="history-empty">
+            <div class="empty-icon">▤</div>
+            <h3>Cargando historial...</h3>
+          </div>
         </div>
       </section>
 
@@ -107,6 +132,6 @@
     </main>
   </div>
 
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

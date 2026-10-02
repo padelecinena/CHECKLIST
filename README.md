@@ -1,25 +1,12 @@
-# Control de Carrocería — Frontend MVP
+# Control de Carrocería
 
-Primera versión del frontend, sin Firebase.
+Aplicación de inspección de carrocería conectada a Firebase Firestore.
 
-## Archivos
+## Historial
+- Filtro desplegable por día.
+- Buscador por número BDG/vehículo.
+- Los filtros pueden utilizarse conjuntamente.
+- Botón para limpiar los filtros.
 
-- `index.html` — estructura de la aplicación.
-- `styles.css` — diseño responsive.
-- `app.js` — navegación, checklist y validaciones.
-
-## Probarlo
-
-Abre `index.html` directamente en el navegador.
-
-## Siguiente paso
-
-Conectar este frontend con Firebase Firestore para guardar:
-
-- número de vehículo
-- fecha/hora
-- resultado OK/NOK de cada punto
-- motivo de cada NOK
-- estado final
-
-Después podremos construir el historial, filtros y gráficos de defectos.
+## Importante
+`index.html` carga `app.js` como módulo porque utiliza los módulos oficiales de Firebase desde CDN.

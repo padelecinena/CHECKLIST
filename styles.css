@@ -656,3 +656,126 @@ main {
     grid-template-columns: 1fr;
   }
 }
+
+/* Historial y filtros */
+.history-filters {
+  display: grid;
+  grid-template-columns: minmax(210px, 1fr) minmax(260px, 1.4fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 18px;
+  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 5px 18px rgba(16, 24, 40, .045);
+}
+
+.history-filter-field label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.history-filter-field select,
+.history-filter-field input {
+  width: 100%;
+  min-height: 45px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: white;
+  color: var(--text);
+  outline: none;
+}
+
+.history-filter-field select:focus,
+.history-filter-field input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(21, 94, 239, .08);
+}
+
+.history-clear-btn {
+  min-height: 45px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: var(--text);
+  padding: 10px 14px;
+  font-weight: 800;
+}
+
+.history-clear-btn:hover {
+  background: #eef2f6;
+}
+
+.history-list {
+  display: grid;
+  gap: 12px;
+}
+
+.history-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 5px 18px rgba(16, 24, 40, .045);
+  padding: 18px;
+}
+
+.history-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.history-date {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.history-details {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--red-soft);
+  color: #7a201a;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.history-empty {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 55px 24px;
+  text-align: center;
+}
+
+.history-empty h3 {
+  margin: 0 0 7px;
+}
+
+.history-empty p {
+  max-width: 540px;
+  margin: auto;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+  .history-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .history-clear-btn {
+    width: 100%;
+  }
+
+  .history-card-top {
+    align-items: flex-start;
+  }
+}
