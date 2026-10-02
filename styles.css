@@ -327,6 +327,61 @@ main {
   transition: width .2s ease;
 }
 
+.control-admin-bar {
+  margin-bottom: 14px;
+  padding: 15px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 5px 18px rgba(16, 24, 40, .045);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.control-admin-note {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.control-admin-actions {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.control-admin-btn {
+  border-radius: 10px;
+  padding: 10px 13px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .3px;
+  color: white;
+  border: 1px solid transparent;
+}
+
+.add-control-btn {
+  background: var(--red);
+  border-color: var(--red);
+}
+
+.add-control-btn:hover {
+  background: #b42318;
+}
+
+.remove-control-btn {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.remove-control-btn:hover {
+  background: #107438;
+}
+
 .checklist {
   display: grid;
   gap: 12px;
@@ -521,6 +576,20 @@ main {
   .inspection-summary {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .control-admin-bar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .control-admin-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .control-admin-btn {
+    flex: 1;
   }
 
   .progress-wrap {

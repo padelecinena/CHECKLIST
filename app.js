@@ -13,7 +13,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const checklistItems = [
+const baseChecklistItems = [
   {
     id: "vin",
     title: "LLEVA EL VIN BIEN GRABADO"
@@ -52,6 +52,12 @@ const checklistItems = [
   }
 ];
 
+const CONTROL_PASSWORD = "0109";
+const CUSTOM_CONTROLS_STORAGE_KEY = "carroceria_custom_controls_v1";
+
+let customChecklistItems = loadCustomControls();
+let checklistItems = getChecklistItems();
+
 const state = {
   answers: {},
   reasons: {}
@@ -70,6 +76,106 @@ const progressBar = document.getElementById("progressBar");
 const inspectionSummary = document.querySelector(".inspection-summary");
 const headerStatus = document.getElementById("headerStatus");
 const toast = document.getElementById("toast");
+
+function loadCustomControls() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CUSTOM_CONTROLS_STORAGE_KEY) || "[]");
+    if (!Array.isArray(saved)) return [];
+
+    return saved
+      .filter(item => item && typeof item.id === "string" && typeof item.title === "string")
+      .map(item => ({
+        id: item.id,
+        title: item.title.trim(),
+        custom: true
+      }))
+      .filter(item => item.title);
+  } catch (error) {
+    console.warn("No se pudieron cargar los controles personalizados:", error);
+    return [];
+  }
+}
+
+function saveCustomControls() {
+  localStorage.setItem(CUSTOM_CONTROLS_STORAGE_KEY, JSON.stringify(customChecklistItems));
+}
+
+function getChecklistItems() {
+  return [...baseChecklistItems, ...customChecklistItems];
+}
+
+function refreshChecklistDefinition() {
+  checklistItems = getChecklistItems();
+}
+
+function askForControlPassword(actionLabel) {
+  const password = window.prompt(`Introduce la contraseña para ${actionLabel}:`);
+  if (password === null) return false;
+
+  if (password !== CONTROL_PASSWORD) {
+    showToast("Contraseña incorrecta.");
+    return false;
+  }
+
+  return true;
+}
+
+function addCustomControl() {
+  if (!askForControlPassword("gestionar controles")) return;
+
+  const title = window.prompt("Escribe el nuevo control/defecto:");
+  if (title === null) return;
+
+  const cleanTitle = title.trim();
+  if (!cleanTitle) {
+    showToast("El nombre del control no puede estar vacío.");
+    return;
+  }
+
+  const id = `custom_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  customChecklistItems.push({
+    id,
+    title: cleanTitle,
+    custom: true
+  });
+  saveCustomControls();
+  refreshChecklistDefinition();
+  renderChecklist();
+  updateSummary();
+  showToast("Control añadido correctamente.");
+}
+
+function removeCustomControl() {
+  if (!askForControlPassword("quitar controles")) return;
+
+  if (!customChecklistItems.length) {
+    showToast("No hay controles añadidos para quitar.");
+    return;
+  }
+
+  const options = customChecklistItems
+    .map((item, index) => `${index + 1}. ${item.title}`)
+    .join("\n");
+  const selection = window.prompt(`¿Qué control quieres quitar?\n\n${options}\n\nEscribe el número:`);
+
+  if (selection === null) return;
+
+  const index = Number(selection) - 1;
+  if (!Number.isInteger(index) || index < 0 || index >= customChecklistItems.length) {
+    showToast("Selección no válida.");
+    return;
+  }
+
+  const removed = customChecklistItems[index];
+  customChecklistItems.splice(index, 1);
+  delete state.answers[removed.id];
+  delete state.reasons[removed.id];
+  saveCustomControls();
+  refreshChecklistDefinition();
+  renderChecklist();
+  updateSummary();
+  showToast(`Control eliminado: ${removed.title}`);
+}
 
 function renderChecklist() {
   checklist.innerHTML = checklistItems.map((item, index) => `
@@ -272,6 +378,8 @@ document.getElementById("inspectionForm").addEventListener("submit", async (even
       fecha: serverTimestamp(),
       estadoFinal: result.finalStatus,
       puntos: Object.fromEntries(checklistItems.map(item => [item.id, {
+        titulo: item.title,
+        esPersonalizado: Boolean(item.custom),
         estado: state.answers[item.id].toUpperCase(),
         opcionesNok: Array.isArray(state.reasons[item.id]) ? state.reasons[item.id] : [],
         motivo: Array.isArray(state.reasons[item.id]) ? "" : (state.reasons[item.id] || "")
@@ -486,11 +594,12 @@ function renderFilteredHistory() {
       .filter(([, p]) => p.estado === "NOK")
       .map(([id, p]) => {
         const item = checklistItems.find(x => x.id === id);
+        const title = p.titulo || item?.title || id;
         const detail = p.opcionesNok?.length
           ? p.opcionesNok.join(", ")
           : (p.motivo || "Sin motivo");
 
-        return `<div><strong>${item?.title || id}:</strong> ${detail}</div>`;
+        return `<div><strong>${title}:</strong> ${detail}</div>`;
       })
       .join("");
 
@@ -519,6 +628,9 @@ function showToast(message) {
   clearTimeout(showToast.timer);
   showToast.timer = setTimeout(() => toast.classList.remove("show"), 3200);
 }
+
+document.getElementById("addControlBtn")?.addEventListener("click", addCustomControl);
+document.getElementById("removeControlBtn")?.addEventListener("click", removeCustomControl);
 
 renderChecklist();
 updateSummary();
