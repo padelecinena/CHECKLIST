@@ -24,6 +24,35 @@
           <p>Registra una nueva revisión o consulta el historial de inspecciones.</p>
         </div>
 
+        <section class="dashboard-card" id="defectsDashboard">
+          <div class="dashboard-header">
+            <div>
+              <div class="eyebrow">ANÁLISIS DE DEFECTOS</div>
+              <h3>Defectos detectados</h3>
+              <p>Cuenta cuántas veces aparece cada defecto en las inspecciones guardadas.</p>
+            </div>
+            <div class="dashboard-filter">
+              <label for="dashboardDateFilter">Periodo</label>
+              <select id="dashboardDateFilter">
+                <option value="">GENERAL</option>
+              </select>
+            </div>
+          </div>
+          <div class="dashboard-stats">
+            <div class="dashboard-stat">
+              <span>COCHES INSPECCIONADOS</span>
+              <strong id="dashboardCarsCount">0</strong>
+            </div>
+            <div class="dashboard-stat">
+              <span>DEFECTOS DETECTADOS</span>
+              <strong id="dashboardDefectsCount">0</strong>
+            </div>
+          </div>
+          <div class="defect-chart-wrap">
+            <div id="defectChart" class="defect-chart" aria-live="polite"></div>
+          </div>
+        </section>
+
         <div class="home-grid">
           <button class="menu-card primary-card" id="newInspectionBtn">
             <span class="menu-icon">✓</span>

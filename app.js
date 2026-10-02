@@ -82,6 +82,10 @@ const progressBar = document.getElementById("progressBar");
 const inspectionSummary = document.querySelector(".inspection-summary");
 const headerStatus = document.getElementById("headerStatus");
 const toast = document.getElementById("toast");
+const dashboardDateFilter = document.getElementById("dashboardDateFilter");
+const dashboardCarsCount = document.getElementById("dashboardCarsCount");
+const dashboardDefectsCount = document.getElementById("dashboardDefectsCount");
+const defectChart = document.getElementById("defectChart");
 
 function normalizeControl(item) {
   if (!item || typeof item.id !== "string" || typeof item.title !== "string") return null;
@@ -458,6 +462,7 @@ document.getElementById("inspectionForm").addEventListener("submit", async (even
       }]))
     });
     showToast("Inspección guardada correctamente en Firebase.");
+    await loadDashboard();
     setTimeout(() => { resetInspection(); showScreen(homeScreen); }, 1200);
   } catch (error) {
     console.error("Error guardando en Firebase:", error);
@@ -490,6 +495,10 @@ document.getElementById("newInspectionBtn").addEventListener("click", () => {
   showScreen(inspectionScreen);
   vehicleNumber.focus();
 });
+
+if (dashboardDateFilter) {
+  dashboardDateFilter.addEventListener("change", renderDashboard);
+}
 
 document.getElementById("historyBtn").addEventListener("click", async () => {
   showScreen(historyScreen);
@@ -694,6 +703,127 @@ function renderFilteredHistory() {
     `;
   }).join("");
 }
+let dashboardRecords = [];
+
+function getRecordDateKey(record) {
+  return getHistoryDateKey(record?.data?.fecha);
+}
+
+function getRecordDefects(record) {
+  const points = record?.data?.puntos || {};
+  const defects = [];
+
+  Object.entries(points).forEach(([id, point]) => {
+    if (!point || point.estado !== "NOK") return;
+
+    const title = point.titulo || checklistItems.find(item => item.id === id)?.title || id;
+    const options = Array.isArray(point.opcionesNok)
+      ? point.opcionesNok.map(value => String(value).trim()).filter(Boolean)
+      : [];
+
+    if (options.length) {
+      options.forEach(option => defects.push(`${title} — ${option}`));
+      return;
+    }
+
+    const reason = String(point.motivo || "").trim();
+    defects.push(reason ? `${title} — ${reason}` : title);
+  });
+
+  return defects;
+}
+
+function populateDashboardDateFilter() {
+  if (!dashboardDateFilter) return;
+
+  const currentValue = dashboardDateFilter.value;
+  const dates = [...new Set(
+    dashboardRecords.map(getRecordDateKey).filter(Boolean)
+  )].sort((a, b) => b.localeCompare(a));
+
+  dashboardDateFilter.innerHTML = '<option value="">GENERAL</option>' +
+    dates.map(dateKey => `<option value="${dateKey}">${formatHistoryDay(dateKey)}</option>`).join("");
+
+  if (dates.includes(currentValue)) dashboardDateFilter.value = currentValue;
+}
+
+function renderDashboard() {
+  if (!defectChart || !dashboardCarsCount || !dashboardDefectsCount) return;
+
+  const selectedDate = dashboardDateFilter?.value || "";
+  const filtered = dashboardRecords.filter(record => {
+    return !selectedDate || getRecordDateKey(record) === selectedDate;
+  });
+
+  const counts = new Map();
+  filtered.forEach(record => {
+    getRecordDefects(record).forEach(defect => {
+      counts.set(defect, (counts.get(defect) || 0) + 1);
+    });
+  });
+
+  const rows = [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "es"));
+
+  dashboardCarsCount.textContent = String(filtered.length);
+  dashboardDefectsCount.textContent = String(rows.reduce((sum, [, count]) => sum + count, 0));
+
+  if (!filtered.length) {
+    defectChart.innerHTML = '<div class="dashboard-empty"><strong>Sin inspecciones</strong><span>No hay coches inspeccionados en el periodo seleccionado.</span></div>';
+    return;
+  }
+
+  if (!rows.length) {
+    defectChart.innerHTML = '<div class="dashboard-empty"><strong>Sin defectos NOK</strong><span>Las inspecciones de este periodo no tienen defectos registrados.</span></div>';
+    return;
+  }
+
+  const max = Math.max(...rows.map(([, count]) => count));
+  defectChart.innerHTML = rows.map(([label, count]) => {
+    const width = Math.max(3, Math.round((count / max) * 100));
+    return `
+      <div class="defect-row" title="${escapeHtml(label)}: ${count}">
+        <div class="defect-row-top">
+          <span class="defect-label">${escapeHtml(label)}</span>
+          <strong>${count}</strong>
+        </div>
+        <div class="defect-bar-track"><div class="defect-bar" style="width:${width}%"></div></div>
+      </div>
+    `;
+  }).join("");
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+async function loadDashboard() {
+  if (!defectChart) return;
+
+  defectChart.innerHTML = '<div class="dashboard-empty"><strong>Cargando datos...</strong><span>Consultando inspecciones guardadas.</span></div>';
+
+  try {
+    const snapshot = await getDocs(
+      query(collection(db, "inspecciones"), orderBy("fecha", "desc"))
+    );
+
+    dashboardRecords = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+    populateDashboardDateFilter();
+    renderDashboard();
+  } catch (error) {
+    console.error("Error cargando dashboard:", error);
+    dashboardRecords = [];
+    dashboardCarsCount.textContent = "0";
+    dashboardDefectsCount.textContent = "0";
+    defectChart.innerHTML = '<div class="dashboard-empty"><strong>No se pudieron cargar los datos</strong><span>Revisa Firebase y las reglas de Firestore.</span></div>';
+  }
+}
+
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add("show");
@@ -710,3 +840,4 @@ document.getElementById("cancelRemoveControlBtn")?.addEventListener("click", clo
 
 renderChecklist();
 updateSummary();
+loadDashboard();

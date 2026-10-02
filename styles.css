@@ -123,6 +123,151 @@ main {
   font-size: 16px;
 }
 
+/* Dashboard de defectos */
+.dashboard-card {
+  margin: 28px 0 24px;
+  padding: 22px;
+  background: var(--card, #fff);
+  border: 1px solid var(--border, #e4e7ec);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.dashboard-header h3 {
+  margin: 5px 0 4px;
+  font-size: 22px;
+}
+
+.dashboard-header p {
+  margin: 0;
+  color: #667085;
+}
+
+.dashboard-filter {
+  min-width: 220px;
+}
+
+.dashboard-filter label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .06em;
+}
+
+.dashboard-filter select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+}
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.dashboard-stat {
+  padding: 15px 17px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #eaecf0;
+}
+
+.dashboard-stat span {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  color: #667085;
+}
+
+.dashboard-stat strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 28px;
+}
+
+.defect-chart-wrap {
+  overflow-x: auto;
+}
+
+.defect-chart {
+  display: grid;
+  gap: 13px;
+  min-width: 420px;
+}
+
+.defect-row-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.defect-label {
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.defect-row-top strong {
+  min-width: 26px;
+  text-align: right;
+}
+
+.defect-bar-track {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eef2f6;
+}
+
+.defect-bar {
+  height: 100%;
+  min-width: 3px;
+  border-radius: inherit;
+  background: #dc2626;
+  transition: width .25s ease;
+}
+
+.dashboard-empty {
+  display: grid;
+  gap: 4px;
+  padding: 34px 16px;
+  text-align: center;
+  color: #667085;
+}
+
+.dashboard-empty strong {
+  color: #1d2939;
+}
+
+@media (max-width: 700px) {
+  .dashboard-header {
+    flex-direction: column;
+  }
+  .dashboard-filter {
+    width: 100%;
+  }
+  .dashboard-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
 .home-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
