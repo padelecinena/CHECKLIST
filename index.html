@@ -97,6 +97,43 @@
           </div>
         </form>
       </section>
+      <div class="control-modal" id="addControlModal" aria-hidden="true">
+        <div class="control-modal-card">
+          <div class="eyebrow">NUEVO CONTROL</div>
+          <h3>Añadir control</h3>
+          <p>Añade un nuevo PUNTO de inspección y, si quieres, hasta 5 opciones para indicar por qué es NOK.</p>
+          <label for="newControlTitle">Nombre del control</label>
+          <input id="newControlTitle" type="text" placeholder="Ejemplo: VIGA" autocomplete="off">
+          <div class="new-control-options">
+            <label>Opciones NOK (rellena solo las que necesites)</label>
+            <div class="new-control-options-grid">
+            <input class="new-control-option" type="text" placeholder="Opción 1">
+            <input class="new-control-option" type="text" placeholder="Opción 2">
+            <input class="new-control-option" type="text" placeholder="Opción 3">
+            <input class="new-control-option" type="text" placeholder="Opción 4">
+            <input class="new-control-option" type="text" placeholder="Opción 5">
+            </div>
+          </div>
+          <div class="control-modal-actions">
+            <button type="button" class="secondary-btn" id="cancelAddControlBtn">Cancelar</button>
+            <button type="button" class="save-btn modal-save-btn" id="saveNewControlBtn">Añadir control</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-modal" id="removeControlModal" aria-hidden="true">
+        <div class="control-modal-card">
+          <div class="eyebrow">QUITAR CONTROL</div>
+          <h3>Selecciona un control activo</h3>
+          <p>Aquí aparecen TODOS los puntos/controles activos de la inspección. Puedes quitar cualquiera de ellos.</p>
+          <label for="removeControlSelect">Control activo</label>
+          <select id="removeControlSelect"></select>
+          <div class="control-modal-actions">
+            <button type="button" class="secondary-btn" id="cancelRemoveControlBtn">Cancelar</button>
+            <button type="button" class="control-admin-btn remove-control-btn" id="confirmRemoveControlBtn">Quitar control</button>
+          </div>
+        </div>
+      </div>
 
       <section id="historyScreen" class="screen">
         <div class="section-header">

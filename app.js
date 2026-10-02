@@ -53,10 +53,16 @@ const baseChecklistItems = [
 ];
 
 const CONTROL_PASSWORD = "0109";
-const CUSTOM_CONTROLS_STORAGE_KEY = "carroceria_custom_controls_v1";
+const CONTROLS_STORAGE_KEY = "carroceria_controles_v3";
 
-let customChecklistItems = loadCustomControls();
-let checklistItems = getChecklistItems();
+// Todos los puntos de la inspección son CONTROLES. No existe diferencia
+// funcional entre los controles que vienen de inicio y los que se añaden.
+const initialControls = baseChecklistItems.map(item => ({
+  ...item,
+  options: Array.isArray(item.options) ? [...item.options] : undefined
+}));
+
+let checklistItems = loadControls();
 
 const state = {
   answers: {},
@@ -77,35 +83,69 @@ const inspectionSummary = document.querySelector(".inspection-summary");
 const headerStatus = document.getElementById("headerStatus");
 const toast = document.getElementById("toast");
 
-function loadCustomControls() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(CUSTOM_CONTROLS_STORAGE_KEY) || "[]");
-    if (!Array.isArray(saved)) return [];
+function normalizeControl(item) {
+  if (!item || typeof item.id !== "string" || typeof item.title !== "string") return null;
 
-    return saved
-      .filter(item => item && typeof item.id === "string" && typeof item.title === "string")
-      .map(item => ({
-        id: item.id,
-        title: item.title.trim(),
-        custom: true
-      }))
-      .filter(item => item.title);
+  const title = item.title.trim();
+  if (!title) return null;
+
+  const options = Array.isArray(item.options)
+    ? item.options.map(option => String(option).trim()).filter(Boolean)
+    : [];
+
+  return {
+    id: item.id,
+    title,
+    ...(options.length ? { options } : {})
+  };
+}
+
+function loadControls() {
+  try {
+    // v3 is the single source of truth: every item in this array is a
+    // control/punto, whether it was original or added later.
+    const savedV3 = JSON.parse(localStorage.getItem(CONTROLS_STORAGE_KEY) || "null");
+    if (Array.isArray(savedV3)) {
+      return savedV3.map(normalizeControl).filter(Boolean);
+    }
+
+    // Repair/migrate older versions. The previous releases could store only
+    // custom controls, which made the original points impossible to manage.
+    // Build v3 with ALL original points + any custom controls found in v1/v2.
+    const oldV2 = JSON.parse(localStorage.getItem("carroceria_controles_v2") || "null");
+    const oldCustom = JSON.parse(localStorage.getItem("carroceria_custom_controls_v1") || "[]");
+    const oldV2Controls = Array.isArray(oldV2) ? oldV2 : [];
+    const oldCustomControls = Array.isArray(oldCustom) ? oldCustom : [];
+
+    const merged = [...initialControls, ...oldV2Controls, ...oldCustomControls]
+      .map(normalizeControl)
+      .filter(Boolean);
+
+    const seen = new Set();
+    const unique = merged.filter(item => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    });
+
+    // The user explicitly wants the original points to be manageable now.
+    // We therefore intentionally do NOT import the old "removed controls"
+    // list: those removals came from the old, incompatible implementation.
+    localStorage.setItem(CONTROLS_STORAGE_KEY, JSON.stringify(unique));
+    return unique;
   } catch (error) {
-    console.warn("No se pudieron cargar los controles personalizados:", error);
-    return [];
+    console.warn("No se pudieron cargar los controles:", error);
+    const fallback = initialControls.map(normalizeControl).filter(Boolean);
+    localStorage.setItem(CONTROLS_STORAGE_KEY, JSON.stringify(fallback));
+    return fallback;
   }
 }
-
-function saveCustomControls() {
-  localStorage.setItem(CUSTOM_CONTROLS_STORAGE_KEY, JSON.stringify(customChecklistItems));
+function saveControls() {
+  localStorage.setItem(CONTROLS_STORAGE_KEY, JSON.stringify(checklistItems));
 }
 
-function getChecklistItems() {
-  return [...baseChecklistItems, ...customChecklistItems];
-}
-
-function refreshChecklistDefinition() {
-  checklistItems = getChecklistItems();
+function getAllActiveControls() {
+  return checklistItems;
 }
 
 function askForControlPassword(actionLabel) {
@@ -120,61 +160,93 @@ function askForControlPassword(actionLabel) {
   return true;
 }
 
+function openAddControlModal() {
+  const modal = document.getElementById("addControlModal");
+  const titleInput = document.getElementById("newControlTitle");
+  const optionInputs = [...document.querySelectorAll(".new-control-option")];
+  titleInput.value = "";
+  optionInputs.forEach(input => { input.value = ""; });
+  modal.classList.add("visible");
+  titleInput.focus();
+}
+
+function closeAddControlModal() {
+  document.getElementById("addControlModal").classList.remove("visible");
+}
+
 function addCustomControl() {
-  if (!askForControlPassword("gestionar controles")) return;
+  if (!askForControlPassword("poner controles")) return;
+  openAddControlModal();
+}
 
-  const title = window.prompt("Escribe el nuevo control/defecto:");
-  if (title === null) return;
+function saveNewControlFromModal() {
+  const title = document.getElementById("newControlTitle").value.trim();
+  const options = [...document.querySelectorAll(".new-control-option")]
+    .map(input => input.value.trim())
+    .filter(Boolean);
 
-  const cleanTitle = title.trim();
-  if (!cleanTitle) {
+  if (!title) {
     showToast("El nombre del control no puede estar vacío.");
     return;
   }
 
-  const id = `custom_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  customChecklistItems.push({
+  const id = `control_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  checklistItems.push({
     id,
-    title: cleanTitle,
-    custom: true
+    title,
+    ...(options.length ? { options } : {})
   });
-  saveCustomControls();
-  refreshChecklistDefinition();
+  saveControls();
   renderChecklist();
   updateSummary();
-  showToast("Control añadido correctamente.");
+  closeAddControlModal();
+  showToast(options.length
+    ? `Control añadido con ${options.length} opciones.`
+    : "Control añadido correctamente.");
 }
 
-function removeCustomControl() {
+function openRemoveControlModal() {
   if (!askForControlPassword("quitar controles")) return;
 
-  if (!customChecklistItems.length) {
-    showToast("No hay controles añadidos para quitar.");
+  const activeControls = getAllActiveControls();
+  if (!activeControls.length) {
+    showToast("No hay controles activos para quitar.");
     return;
   }
 
-  const options = customChecklistItems
-    .map((item, index) => `${index + 1}. ${item.title}`)
-    .join("\n");
-  const selection = window.prompt(`¿Qué control quieres quitar?\n\n${options}\n\nEscribe el número:`);
+  const select = document.getElementById("removeControlSelect");
+  select.innerHTML = activeControls.map((item, index) =>
+    `<option value="${item.id}">PUNTO ${index + 1} — ${item.title}</option>`
+  ).join("");
+  document.getElementById("removeControlModal").classList.add("visible");
+}
 
-  if (selection === null) return;
+function closeRemoveControlModal() {
+  document.getElementById("removeControlModal").classList.remove("visible");
+}
 
-  const index = Number(selection) - 1;
-  if (!Number.isInteger(index) || index < 0 || index >= customChecklistItems.length) {
-    showToast("Selección no válida.");
+function removeSelectedControl() {
+  const id = document.getElementById("removeControlSelect").value;
+  const selected = checklistItems.find(item => item.id === id);
+
+  if (!selected) {
+    showToast("No se ha encontrado ese control.");
     return;
   }
 
-  const removed = customChecklistItems[index];
-  customChecklistItems.splice(index, 1);
-  delete state.answers[removed.id];
-  delete state.reasons[removed.id];
-  saveCustomControls();
-  refreshChecklistDefinition();
+  const confirmed = window.confirm(`¿Quieres quitar el control "${selected.title}"?`);
+  if (!confirmed) return;
+
+  checklistItems = checklistItems.filter(item => item.id !== selected.id);
+  saveControls();
+
+  delete state.answers[selected.id];
+  delete state.reasons[selected.id];
+
   renderChecklist();
   updateSummary();
-  showToast(`Control eliminado: ${removed.title}`);
+  closeRemoveControlModal();
+  showToast(`Control eliminado: ${selected.title}`);
 }
 
 function renderChecklist() {
@@ -379,7 +451,7 @@ document.getElementById("inspectionForm").addEventListener("submit", async (even
       estadoFinal: result.finalStatus,
       puntos: Object.fromEntries(checklistItems.map(item => [item.id, {
         titulo: item.title,
-        esPersonalizado: Boolean(item.custom),
+        esPersonalizado: false,
         estado: state.answers[item.id].toUpperCase(),
         opcionesNok: Array.isArray(state.reasons[item.id]) ? state.reasons[item.id] : [],
         motivo: Array.isArray(state.reasons[item.id]) ? "" : (state.reasons[item.id] || "")
@@ -630,7 +702,11 @@ function showToast(message) {
 }
 
 document.getElementById("addControlBtn")?.addEventListener("click", addCustomControl);
-document.getElementById("removeControlBtn")?.addEventListener("click", removeCustomControl);
+document.getElementById("removeControlBtn")?.addEventListener("click", openRemoveControlModal);
+document.getElementById("saveNewControlBtn")?.addEventListener("click", saveNewControlFromModal);
+document.getElementById("cancelAddControlBtn")?.addEventListener("click", closeAddControlModal);
+document.getElementById("confirmRemoveControlBtn")?.addEventListener("click", removeSelectedControl);
+document.getElementById("cancelRemoveControlBtn")?.addEventListener("click", closeRemoveControlModal);
 
 renderChecklist();
 updateSummary();
