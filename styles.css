@@ -127,7 +127,7 @@ main {
 .dashboard-card {
   margin: 28px 0 24px;
   padding: 22px;
-  background: var(--card, #fff);
+  background: var(--surface);
   border: 1px solid var(--border, #e4e7ec);
   border-radius: 20px;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
@@ -1086,4 +1086,175 @@ main {
   display: block;
   min-height: 42px;
   background: #fff;
+}
+
+/* Identidad visual Stellantis / B10 */
+:root {
+  --bg: #06142d;
+  --surface: #0d2346;
+  --surface-soft: #122d58;
+  --text: #f5f9ff;
+  --muted: #aebed6;
+  --border: #27538c;
+  --primary: #2386ff;
+  --primary-dark: #8fc5ff;
+  --green: #27b66a;
+  --green-soft: #e9fff3;
+  --red: #e53935;
+  --red-soft: #351c22;
+  --orange: #ff9e42;
+  --shadow: 0 18px 42px rgba(0, 0, 0, .28);
+}
+
+body {
+  background:
+    radial-gradient(circle at 50% -15%, rgba(41, 123, 235, .28), transparent 38%),
+    linear-gradient(135deg, #071a38 0%, #06142d 55%, #081d3d 100%);
+  color: var(--text);
+}
+
+.topbar {
+  min-height: 84px;
+  padding: 15px 5vw;
+  background: rgba(7, 24, 53, .96);
+  border-bottom: 1px solid rgba(82, 145, 224, .22);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .2);
+}
+
+.brand-lockup { display: flex; align-items: center; gap: 12px; }
+.stellantis-mark {
+  width: 38px; height: 38px; border: 1px solid rgba(255,255,255,.7); border-radius: 50%;
+  display: grid; place-items: center; font-size: 17px; color: white;
+  box-shadow: 0 0 18px rgba(103, 183, 255, .22);
+}
+.brand-name { font-size: 21px; letter-spacing: 4px; font-weight: 500; }
+.brand-subtitle { margin-top: 3px; font-size: 9px; letter-spacing: 1.2px; color: #91a9c9; font-weight: 800; }
+
+.status-pill { background: #17345e; border: 1px solid #2e588c; }
+.status-pill.red { background: #8d2927; }
+.status-pill.green { background: #12643d; }
+
+main { width: min(1360px, 92%); padding: 44px 0 70px; }
+
+.hero { max-width: 760px; margin: 18px auto 32px; }
+.hero-badge {
+  background: rgba(33, 126, 242, .13); color: #8fc5ff; border: 1px solid rgba(75, 153, 255, .3);
+}
+.hero h2 { color: #fff; }
+.hero p { color: #9fb3d0; }
+
+.home-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 1280px;
+  gap: 24px;
+}
+
+.menu-card {
+  position: relative;
+  min-height: 410px;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid #285a96;
+  border-radius: 24px;
+  background: linear-gradient(145deg, rgba(20, 48, 91, .96), rgba(8, 27, 59, .98));
+  color: white;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, .3);
+  text-align: left;
+}
+
+.menu-card::after {
+  content: ""; position: absolute; width: 240px; height: 240px; right: -120px; top: -90px;
+  background: rgba(30, 111, 232, .13); transform: rotate(42deg); pointer-events: none;
+}
+
+.menu-card:hover {
+  transform: translateY(-4px);
+  border-color: #4386d0;
+  box-shadow: 0 24px 55px rgba(0, 0, 0, .38);
+}
+
+.primary-card { border-color: #2d70bb; background: linear-gradient(145deg, #0b3c76, #071e43); }
+
+.menu-image-wrap {
+  display: block; height: 250px; overflow: hidden; position: relative;
+  border-bottom: 1px solid rgba(105, 177, 255, .2);
+}
+.menu-image {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  filter: saturate(.82) contrast(1.04) brightness(.78);
+}
+.menu-image-wrap::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 48%, rgba(4, 19, 42, .86) 100%);
+}
+
+.menu-card-content { display: block; position: relative; padding: 24px 26px 25px; }
+.menu-icon {
+  margin: 38px 26px 25px;
+  width: 82px; height: 82px; border-radius: 20px;
+  background: rgba(47, 132, 244, .14); border: 1px solid rgba(111, 180, 255, .3);
+  color: white; font-size: 46px;
+}
+.menu-icon-document::before, .menu-icon-chart::before { content: ""; }
+.menu-title { font-size: 23px; letter-spacing: .2px; }
+.menu-description { color: #a9bad3; font-size: 13px; max-width: 290px; }
+.menu-arrow {
+  position: absolute; right: 25px; bottom: 22px; font-size: 45px; line-height: 1; font-weight: 200; color: #fff;
+}
+
+.section-header h2 { color: #fff; }
+.back-btn, .secondary-btn {
+  background: #102a50; color: #f5f9ff; border-color: #2b568b;
+}
+.back-btn:hover, .secondary-btn:hover { background: #17345f; }
+
+.vehicle-card, .inspection-summary, .check-item, .empty-history,
+.control-admin-bar, .history-filters, .history-card, .history-empty,
+.dashboard-card {
+  background: rgba(10, 31, 65, .96);
+  border-color: #234b7b;
+  color: #f5f9ff;
+  box-shadow: 0 10px 28px rgba(0,0,0,.2);
+}
+
+.vehicle-input-row input,
+.history-filter-field select, .history-filter-field input,
+.dashboard-filter select,
+.nok-option, .nok-details textarea, .reason-box textarea {
+  background: #081a37; color: #f5f9ff; border-color: #315a8c;
+}
+.vehicle-input-row input::placeholder, .history-filter-field input::placeholder { color: #7188a8; }
+.vehicle-input-row input:focus, .history-filter-field select:focus, .history-filter-field input:focus,
+.dashboard-filter select:focus { border-color: #4b9cff; box-shadow: 0 0 0 3px rgba(55, 141, 255, .14); }
+
+.progress-bar { background: #19365f; }
+.progress-bar div { background: #2b8cff; }
+.check-number { color: #69b2ff; }
+.check-btn { background: #0b2143; border-color: #2d5687; color: #9eb2cd; }
+.check-btn.ok.active { background: #0c4b32; border-color: #2abf78; color: #69e0a5; }
+.check-btn.nok.active { background: #542323; border-color: #ef6b66; color: #ff9c98; }
+.nok-details { background: #321d27; border-color: #74363a; }
+.nok-option:hover { border-color: #e64d49; }
+.custom-checkbox { background: #0b2143; border-color: #58718f; }
+.nok-option input:checked + .custom-checkbox { background: #e53935; border-color: #e53935; }
+
+.dashboard-stat { background: #0a2144; border-color: #214a7c; }
+.dashboard-stat span, .history-date, .dashboard-header p { color: #9fb3d0; }
+.defect-bar-track { background: #17365f; }
+.defect-bar { background: #e53935; }
+.dashboard-empty { color: #9fb3d0; }
+.dashboard-empty strong { color: #fff; }
+
+.history-clear-btn { background: #102a50; color: #fff; border-color: #2b568b; }
+.history-delete-btn { background: #3b2025; border-color: #7b393d; }
+.history-delete-btn:hover { background: #51262c; border-color: #b34a4e; }
+
+.save-btn { background: #1976e8; }
+.save-btn:hover:not(:disabled) { background: #2686f6; }
+.toast { background: #0d2549; border: 1px solid #2c568a; }
+
+@media (max-width: 900px) {
+  .home-grid { grid-template-columns: 1fr; max-width: 620px; }
+  .menu-card { min-height: 280px; }
+  .menu-image-wrap { height: 190px; }
 }

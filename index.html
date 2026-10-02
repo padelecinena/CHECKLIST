@@ -9,38 +9,48 @@
 <body>
   <div class="app-shell">
     <header class="topbar">
-    <div>
-      <div class="eyebrow">CONTROL DE CALIDAD</div>
-      <h1>Carrocería</h1>
-    </div>
-    <div class="status-pill neutral" id="headerStatus">SIN INSPECCIÓN</div>
+      <div class="brand-lockup">
+        <div class="stellantis-mark" aria-hidden="true">✦</div>
+        <div>
+          <div class="brand-name">STELLANTIS</div>
+          <div class="brand-subtitle">CONTROL DE CALIDAD · B10</div>
+        </div>
+      </div>
+      <div class="status-pill neutral" id="headerStatus">SIN INSPECCIÓN</div>
     </header>
 
     <main>
       <section id="homeScreen" class="screen active">
         <div class="hero">
-          <span class="hero-badge">INSPECCIÓN DE VEHÍCULOS</span>
+          <span class="hero-badge">CONTROL DE CALIDAD · CARROCERÍA B10</span>
           <h2>¿Qué quieres hacer?</h2>
-          <p>Registra una nueva revisión o consulta el historial de inspecciones.</p>
+          <p>Selecciona una opción para continuar.</p>
         </div>
 
         <div class="home-grid">
           <button class="menu-card primary-card" id="newInspectionBtn">
-            <span class="menu-icon">✓</span>
-            <span class="menu-title">CARROCERÍA NUEVA</span>
-            <span class="menu-description">Iniciar una nueva inspección</span>
+            <span class="menu-image-wrap">
+              <img class="menu-image" src="b10-carroceria.jpeg" alt="Vehículo B10" loading="eager">
+            </span>
+            <span class="menu-card-content">
+              <span class="menu-title">CARROCERÍA NUEVA</span>
+              <span class="menu-description">Iniciar una nueva inspección</span>
+              <span class="menu-arrow" aria-hidden="true">›</span>
+            </span>
           </button>
 
           <button class="menu-card" id="historyBtn">
-            <span class="menu-icon">▤</span>
+            <span class="menu-icon menu-icon-document" aria-hidden="true">▤</span>
             <span class="menu-title">HISTORIAL</span>
             <span class="menu-description">Consultar inspecciones realizadas</span>
+            <span class="menu-arrow" aria-hidden="true">›</span>
           </button>
 
           <button class="menu-card" id="defectsAnalysisBtn">
-            <span class="menu-icon">▥</span>
+            <span class="menu-icon menu-icon-chart" aria-hidden="true">▥</span>
             <span class="menu-title">ANÁLISIS DE DEFECTOS</span>
             <span class="menu-description">Consultar la frecuencia de los defectos detectados</span>
+            <span class="menu-arrow" aria-hidden="true">›</span>
           </button>
         </div>
       </section>
