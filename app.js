@@ -1,14 +1,13 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+import { initializeApp } from "https://[Log in to view URL]";
 import {
   getFirestore,
   collection,
   addDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
-
-// ================================
-// FIREBASE
-// ================================
+  serverTimestamp,
+  getDocs,
+  query,
+  orderBy
+} from "https://[Log in to view URL]";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAm64KiQ4kF5z0TcM-npVFUja6umeoDyxU",
@@ -19,13 +18,8 @@ const firebaseConfig = {
   appId: "1:322956120324:web:bb4f6f439aa09f66ea8051"
 };
 
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getFirestore(firebaseApp);
-
-
-// ================================
-// CHECKLIST
-// ================================
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 const checklistItems = [
   {
@@ -81,82 +75,42 @@ const checklistItems = [
   }
 ];
 
-
-// ================================
-// ESTADO DE LA APLICACIÓN
-// ================================
-
 const state = {
   answers: {},
   reasons: {}
 };
 
-
-// ================================
-// ELEMENTOS HTML
-// ================================
-
 const homeScreen = document.getElementById("homeScreen");
 const inspectionScreen = document.getElementById("inspectionScreen");
 const historyScreen = document.getElementById("historyScreen");
-
 const checklist = document.getElementById("checklist");
 const vehicleNumber = document.getElementById("vehicleNumber");
 const vehicleError = document.getElementById("vehicleError");
-
 const saveBtn = document.getElementById("saveBtn");
+const overallStatusText = document.getElementById("overallStatusText");
+const progressText = document.getElementById("progressText");
+const progressBar = document.getElementById("progressBar");
+const inspectionSummary = document.querySelector(".inspection-summary");
+const headerStatus = document.getElementById("headerStatus");
+const toast = document.getElementById("toast");
 
-const overallStatusText =
-  document.getElementById("overallStatusText");
-
-const progressText =
-  document.getElementById("progressText");
-
-const progressBar =
-  document.getElementById("progressBar");
-
-const inspectionSummary =
-  document.querySelector(".inspection-summary");
-
-const headerStatus =
-  document.getElementById("headerStatus");
-
-const toast =
-  document.getElementById("toast");
-
-
-// ================================
-// PINTAR CHECKLIST
-// ================================
 
 function renderChecklist() {
-
   checklist.innerHTML = checklistItems.map((item, index) => `
-    
     <article class="check-item" data-item="${item.id}">
-
       <div class="check-top">
 
         <div>
-
-          <div class="check-number">
-            PUNTO ${index + 1}
-          </div>
-
-          <h3 class="check-title">
-            ${item.title}
-          </h3>
-
+          <div class="check-number">PUNTO ${index + 1}</div>
+          <h3 class="check-title">${item.title}</h3>
         </div>
 
         <div class="check-options">
-
           <button
             type="button"
             class="check-btn ok"
             data-action="ok"
-            data-id="${item.id}"
-          >
+            data-id="${item.id}">
             OK
           </button>
 
@@ -164,25 +118,18 @@ function renderChecklist() {
             type="button"
             class="check-btn nok"
             data-action="nok"
-            data-id="${item.id}"
-          >
+            data-id="${item.id}">
             NOK
           </button>
-
         </div>
 
       </div>
 
-
-      <div
-        class="nok-details"
-        id="details-${item.id}"
-      >
+      <div class="nok-details" id="details-${item.id}">
 
         ${
           item.options
             ? `
-
               <div class="nok-detail-title">
                 ¿Qué elemento está NOK?
               </div>
@@ -190,7 +137,6 @@ function renderChecklist() {
               <div class="nok-option-list">
 
                 ${item.options.map((option, optionIndex) => `
-
                   <label class="nok-option">
 
                     <input
@@ -202,23 +148,17 @@ function renderChecklist() {
 
                     <span class="custom-checkbox"></span>
 
-                    <span>
-                      ${option}
-                    </span>
+                    <span>${option}</span>
 
                   </label>
-
                 `).join("")}
 
               </div>
-
             `
             : `
-
               <label
                 class="reason-label"
-                for="reasonInput-${item.id}"
-              >
+                for="reasonInput-${item.id}">
                 Motivo del NOK *
               </label>
 
@@ -227,138 +167,95 @@ function renderChecklist() {
                 data-reason="${item.id}"
                 placeholder="Explica por qué este punto estaba NOK..."
               ></textarea>
-
             `
         }
 
       </div>
-
     </article>
-
   `).join("");
 
 
-  // Botones OK / NOK
+  document.querySelectorAll(".check-btn").forEach(button => {
 
-  document
-    .querySelectorAll(".check-btn")
-    .forEach(button => {
+    button.addEventListener("click", () => {
+      setAnswer(
+        button.dataset.id,
+        button.dataset.action
+      );
+    });
 
-      button.addEventListener("click", () => {
+  });
 
-        setAnswer(
-          button.dataset.id,
-          button.dataset.action
+
+  document.querySelectorAll("textarea[data-reason]").forEach(textarea => {
+
+    textarea.addEventListener("input", () => {
+
+      state.reasons[textarea.dataset.reason] =
+        textarea.value.trim();
+
+      updateSummary();
+
+    });
+
+  });
+
+
+  document.querySelectorAll("input[data-nok-option]").forEach(checkbox => {
+
+    checkbox.addEventListener("change", () => {
+
+      const id = checkbox.dataset.nokOption;
+
+      if (!Array.isArray(state.reasons[id])) {
+        state.reasons[id] = [];
+      }
+
+      const values = state.reasons[id];
+
+      if (
+        checkbox.checked &&
+        !values.includes(checkbox.dataset.option)
+      ) {
+        values.push(checkbox.dataset.option);
+      }
+
+      if (!checkbox.checked) {
+
+        state.reasons[id] = values.filter(
+          value => value !== checkbox.dataset.option
         );
 
-      });
+      }
+
+      updateSummary();
 
     });
 
-
-  // Campos de texto para NOK
-
-  document
-    .querySelectorAll("textarea[data-reason]")
-    .forEach(textarea => {
-
-      textarea.addEventListener("input", () => {
-
-        state.reasons[textarea.dataset.reason] =
-          textarea.value.trim();
-
-        updateSummary();
-
-      });
-
-    });
-
-
-  // Casillas de opciones NOK
-
-  document
-    .querySelectorAll("input[data-nok-option]")
-    .forEach(checkbox => {
-
-      checkbox.addEventListener("change", () => {
-
-        const id =
-          checkbox.dataset.nokOption;
-
-        if (!state.reasons[id]) {
-          state.reasons[id] = [];
-        }
-
-        const values =
-          Array.isArray(state.reasons[id])
-            ? state.reasons[id]
-            : [];
-
-
-        if (
-          checkbox.checked &&
-          !values.includes(checkbox.dataset.option)
-        ) {
-
-          values.push(
-            checkbox.dataset.option
-          );
-
-        }
-
-
-        if (!checkbox.checked) {
-
-          state.reasons[id] =
-            values.filter(
-              value =>
-                value !== checkbox.dataset.option
-            );
-
-        } else {
-
-          state.reasons[id] = values;
-
-        }
-
-        updateSummary();
-
-      });
-
-    });
+  });
 
 }
 
-
-// ================================
-// SELECCIONAR OK / NOK
-// ================================
 
 function setAnswer(id, answer) {
 
   state.answers[id] = answer;
 
+  const item = document.querySelector(
+    `[data-item="${id}"]`
+  );
 
-  const item =
-    document.querySelector(
-      `[data-item="${id}"]`
-    );
+  const okButton = item.querySelector(
+    '[data-action="ok"]'
+  );
 
+  const nokButton = item.querySelector(
+    '[data-action="nok"]'
+  );
 
-  const okButton =
-    item.querySelector(
-      '[data-action="ok"]'
-    );
-
-
-  const nokButton =
-    item.querySelector(
-      '[data-action="nok"]'
-    );
-
-
-  const details =
-    item.querySelector(".nok-details");
+  const details = item.querySelector(
+    ".nok-details"
+  );
 
 
   okButton.classList.toggle(
@@ -366,12 +263,10 @@ function setAnswer(id, answer) {
     answer === "ok"
   );
 
-
   nokButton.classList.toggle(
     "active",
     answer === "nok"
   );
-
 
   details.classList.toggle(
     "visible",
@@ -379,33 +274,30 @@ function setAnswer(id, answer) {
   );
 
 
-  // Si vuelve de NOK a OK,
-  // borramos los motivos anteriores.
-
   if (answer !== "nok") {
 
-    state.reasons[id] =
+    if (
       item.querySelectorAll(
         'input[data-nok-option]'
       ).length
-        ? []
-        : "";
+    ) {
+      state.reasons[id] = [];
+    } else {
+      state.reasons[id] = "";
+    }
 
 
-    item
-      .querySelectorAll(
-        'input[data-nok-option]'
-      )
-      .forEach(input => {
+    item.querySelectorAll(
+      'input[data-nok-option]'
+    ).forEach(input => {
 
-        input.checked = false;
+      input.checked = false;
 
-      });
+    });
 
 
     const textarea =
       item.querySelector("textarea");
-
 
     if (textarea) {
       textarea.value = "";
@@ -419,20 +311,12 @@ function setAnswer(id, answer) {
 }
 
 
-// ================================
-// COMPROBAR MOTIVO DEL NOK
-// ================================
-
 function hasNokReason(item) {
 
-  if (
-    state.answers[item.id] !== "nok"
-  ) {
+  if (state.answers[item.id] !== "nok") {
     return true;
   }
 
-
-  // Puntos que tienen opciones
 
   if (item.options) {
 
@@ -444,8 +328,6 @@ function hasNokReason(item) {
   }
 
 
-  // Puntos con explicación escrita
-
   return (
     typeof state.reasons[item.id] === "string" &&
     state.reasons[item.id].trim().length > 0
@@ -454,55 +336,39 @@ function hasNokReason(item) {
 }
 
 
-// ================================
-// ACTUALIZAR ESTADO GENERAL
-// ================================
-
 function updateSummary() {
 
-  const total =
-    checklistItems.length;
-
+  const total = checklistItems.length;
 
   const answered =
     checklistItems.filter(
       item => state.answers[item.id]
     ).length;
 
-
   const hasNok =
     checklistItems.some(
-      item =>
-        state.answers[item.id] === "nok"
+      item => state.answers[item.id] === "nok"
     );
-
 
   const allNokHaveReason =
-    checklistItems.every(
-      hasNokReason
-    );
-
+    checklistItems.every(hasNokReason);
 
   const vehicleOk =
     /^\d{6}$/.test(
       vehicleNumber.value
     );
 
-
   const complete =
     answered === total &&
     allNokHaveReason &&
     vehicleOk;
 
-
   const finalOk =
-    complete &&
-    !hasNok;
+    complete && !hasNok;
 
 
   progressText.textContent =
     `${answered} / ${total}`;
-
 
   progressBar.style.width =
     `${(answered / total) * 100}%`;
@@ -510,8 +376,7 @@ function updateSummary() {
 
   if (finalOk) {
 
-    overallStatusText.textContent =
-      "OK";
+    overallStatusText.textContent = "OK";
 
     inspectionSummary.classList.add(
       "good"
@@ -526,21 +391,14 @@ function updateSummary() {
   } else {
 
     overallStatusText.textContent =
-      hasNok
-        ? "NOK"
-        : "PENDIENTE";
-
+      hasNok ? "NOK" : "PENDIENTE";
 
     inspectionSummary.classList.remove(
       "good"
     );
 
-
     headerStatus.textContent =
-      hasNok
-        ? "NOK"
-        : "PENDIENTE";
-
+      hasNok ? "NOK" : "PENDIENTE";
 
     headerStatus.className =
       "status-pill red";
@@ -548,15 +406,10 @@ function updateSummary() {
   }
 
 
-  saveBtn.disabled =
-    !complete;
+  saveBtn.disabled = !complete;
 
 }
 
-
-// ================================
-// VALIDAR VEHÍCULO
-// ================================
 
 function validateVehicle() {
 
@@ -584,169 +437,29 @@ function validateVehicle() {
   }
 
 
-  vehicleError.textContent =
-    "";
+  vehicleError.textContent = "";
 
   return true;
 
 }
 
 
-// ================================
-// CREAR DATOS PARA FIREBASE
-// ================================
+vehicleNumber.addEventListener(
+  "input",
+  () => {
 
-function buildInspectionData() {
+    vehicleNumber.value =
+      vehicleNumber.value
+        .replace(/\D/g, "")
+        .slice(0, 6);
 
-  const hasNok =
-    checklistItems.some(
-      item =>
-        state.answers[item.id] === "nok"
-    );
+    validateVehicle();
 
-
-  const puntos = {};
-
-
-  checklistItems.forEach(item => {
-
-    const isNok =
-      state.answers[item.id] === "nok";
-
-
-    puntos[item.id] = {
-
-      estado:
-        isNok
-          ? "NOK"
-          : "OK",
-
-      opcionesNok:
-        item.options && isNok
-          ? (state.reasons[item.id] || [])
-          : [],
-
-      motivo:
-        !item.options && isNok
-          ? (state.reasons[item.id] || "")
-          : ""
-
-    };
-
-  });
-
-
-  return {
-
-    vehiculo:
-      vehicleNumber.value.trim(),
-
-    fecha:
-      serverTimestamp(),
-
-    estadoFinal:
-      hasNok
-        ? "NOK"
-        : "OK",
-
-    puntos
-
-  };
-
-}
-
-
-// ================================
-// GUARDAR EN FIREBASE
-// ================================
-
-async function saveInspection() {
-
-  const data =
-    buildInspectionData();
-
-
-  saveBtn.disabled =
-    true;
-
-  saveBtn.textContent =
-    "Guardando...";
-
-
-  try {
-
-    const docRef =
-      await addDoc(
-        collection(
-          db,
-          "inspecciones"
-        ),
-        data
-      );
-
-
-    console.log(
-      "Inspección guardada:",
-      docRef.id
-    );
-
-
-    showToast(
-      "Inspección guardada correctamente en Firebase."
-    );
-
-
-    setTimeout(() => {
-
-      resetInspection();
-
-      showScreen(
-        homeScreen
-      );
-
-    }, 1200);
-
-
-  } catch (error) {
-
-    console.error(
-      "Error guardando:",
-      error
-    );
-
-
-    if (
-      error.code ===
-      "permission-denied"
-    ) {
-
-      showToast(
-        "Firebase ha rechazado la escritura. Revisa las reglas de Firestore."
-      );
-
-    } else {
-
-      showToast(
-        "No se pudo guardar la inspección."
-      );
-
-    }
-
-
-    saveBtn.disabled =
-      false;
-
-    saveBtn.textContent =
-      "Guardar inspección";
+    updateSummary();
 
   }
+);
 
-}
-
-
-// ================================
-// BOTÓN GUARDAR
-// ================================
 
 document
   .getElementById("inspectionForm")
@@ -764,8 +477,7 @@ document
 
       const incomplete =
         checklistItems.find(
-          item =>
-            !state.answers[item.id]
+          item => !state.answers[item.id]
         );
 
 
@@ -773,9 +485,7 @@ document
 
         showToast(
           `Falta cerrar el punto ${
-            checklistItems.indexOf(
-              incomplete
-            ) + 1
+            checklistItems.indexOf(incomplete) + 1
           }.`
         );
 
@@ -787,6 +497,7 @@ document
       const missingReason =
         checklistItems.find(
           item =>
+            state.answers[item.id] === "nok" &&
             !hasNokReason(item)
         );
 
@@ -794,10 +505,8 @@ document
       if (missingReason) {
 
         showToast(
-          `Indica qué ha fallado en el punto ${
-            checklistItems.indexOf(
-              missingReason
-            ) + 1
+          `Indica el motivo o elemento NOK del punto ${
+            checklistItems.indexOf(missingReason) + 1
           }.`
         );
 
@@ -806,15 +515,141 @@ document
       }
 
 
-      await saveInspection();
+      const result = {
+
+        vehicleNumber:
+          vehicleNumber.value,
+
+        timestamp:
+          new Date().toISOString(),
+
+        finalStatus:
+          checklistItems.some(
+            item =>
+              state.answers[item.id] === "nok"
+          )
+            ? "NOK"
+            : "OK",
+
+        points:
+          Object.fromEntries(
+            checklistItems.map(item => [
+
+              item.id,
+
+              {
+                status:
+                  state.answers[item.id]
+                    .toUpperCase(),
+
+                reason:
+                  Array.isArray(
+                    state.reasons[item.id]
+                  )
+                    ? state.reasons[item.id].join(", ")
+                    : (
+                        state.reasons[item.id] ||
+                        ""
+                      )
+              }
+
+            ])
+          )
+
+      };
+
+
+      try {
+
+        saveBtn.disabled = true;
+
+
+        await addDoc(
+          collection(
+            db,
+            "inspecciones"
+          ),
+          {
+
+            vehiculo:
+              result.vehicleNumber,
+
+            fecha:
+              serverTimestamp(),
+
+            estadoFinal:
+              result.finalStatus,
+
+            puntos:
+              Object.fromEntries(
+                checklistItems.map(item => [
+
+                  item.id,
+
+                  {
+
+                    estado:
+                      state.answers[item.id]
+                        .toUpperCase(),
+
+                    opcionesNok:
+                      Array.isArray(
+                        state.reasons[item.id]
+                      )
+                        ? state.reasons[item.id]
+                        : [],
+
+                    motivo:
+                      Array.isArray(
+                        state.reasons[item.id]
+                      )
+                        ? ""
+                        : (
+                            state.reasons[item.id] ||
+                            ""
+                          )
+
+                  }
+
+                ])
+              )
+
+          }
+        );
+
+
+        showToast(
+          "Inspección guardada correctamente en Firebase."
+        );
+
+
+        setTimeout(() => {
+
+          resetInspection();
+
+          showScreen(homeScreen);
+
+        }, 1200);
+
+
+      } catch (error) {
+
+        console.error(
+          "Error guardando en Firebase:",
+          error
+        );
+
+        showToast(
+          "No se pudo guardar en Firebase. Revisa las reglas de Firestore."
+        );
+
+        updateSummary();
+
+      }
 
     }
   );
 
-
-// ================================
-// NAVEGACIÓN
-// ================================
 
 function resetInspection() {
 
@@ -825,11 +660,6 @@ function resetInspection() {
   vehicleNumber.value = "";
 
   vehicleError.textContent = "";
-
-  saveBtn.disabled = true;
-
-  saveBtn.textContent =
-    "Guardar inspección";
 
   renderChecklist();
 
@@ -871,10 +701,6 @@ function showScreen(screen) {
 }
 
 
-// ================================
-// BOTONES PRINCIPALES
-// ================================
-
 document
   .getElementById("newInspectionBtn")
   .addEventListener(
@@ -897,11 +723,13 @@ document
   .getElementById("historyBtn")
   .addEventListener(
     "click",
-    () => {
+    async () => {
 
       showScreen(
         historyScreen
       );
+
+      await loadHistory();
 
     }
   );
@@ -953,31 +781,184 @@ document
   );
 
 
-// ================================
-// VEHÍCULO
-// ================================
+async function loadHistory() {
 
-vehicleNumber.addEventListener(
-  "input",
-  () => {
+  const container =
+    document.getElementById(
+      "historyList"
+    ) ||
+    document.querySelector(
+      "#historyScreen .history-list"
+    ) ||
+    document.querySelector(
+      "#historyScreen .history-content"
+    );
 
-    vehicleNumber.value =
-      vehicleNumber.value
-        .replace(/\D/g, "")
-        .slice(0, 6);
+
+  if (!container) {
+    return;
+  }
 
 
-    validateVehicle();
+  container.innerHTML =
+    '<div class="history-empty">Cargando historial...</div>';
 
-    updateSummary();
+
+  try {
+
+    const snapshot =
+      await getDocs(
+        query(
+          collection(
+            db,
+            "inspecciones"
+          ),
+          orderBy(
+            "fecha",
+            "desc"
+          )
+        )
+      );
+
+
+    if (snapshot.empty) {
+
+      container.innerHTML =
+        '<div class="history-empty">No hay inspecciones guardadas.</div>';
+
+      return;
+
+    }
+
+
+    container.innerHTML =
+      snapshot.docs.map(
+        doc => {
+
+          const data =
+            doc.data();
+
+
+          const date =
+            data.fecha?.toDate
+              ? data.fecha
+                  .toDate()
+                  .toLocaleString(
+                    "es-ES"
+                  )
+              : "Fecha pendiente";
+
+
+          const status =
+            data.estadoFinal ||
+            "NOK";
+
+
+          const nokDetails =
+            Object.entries(
+              data.puntos || {}
+            )
+            .filter(
+              ([, p]) =>
+                p.estado === "NOK"
+            )
+            .map(
+              ([id, p]) => {
+
+                const item =
+                  checklistItems.find(
+                    x => x.id === id
+                  );
+
+
+                const detail =
+                  p.opcionesNok?.length
+                    ? p.opcionesNok.join(
+                        ", "
+                      )
+                    : (
+                        p.motivo ||
+                        "Sin motivo"
+                      );
+
+
+                return `
+                  <div>
+                    <strong>
+                      ${item?.title || id}:
+                    </strong>
+                    ${detail}
+                  </div>
+                `;
+
+              }
+            )
+            .join("");
+
+
+          return `
+            <article class="history-card">
+
+              <div class="history-card-top">
+
+                <div>
+
+                  <strong>
+                    Vehículo ${
+                      data.vehiculo || "—"
+                    }
+                  </strong>
+
+                  <div class="history-date">
+                    ${date}
+                  </div>
+
+                </div>
+
+                <span
+                  class="status-pill ${
+                    status === "OK"
+                      ? "green"
+                      : "red"
+                  }"
+                >
+                  ${status}
+                </span>
+
+              </div>
+
+              ${
+                nokDetails
+                  ? `
+                    <div class="history-details">
+                      ${nokDetails}
+                    </div>
+                  `
+                  : ""
+              }
+
+            </article>
+          `;
+
+        }
+      ).join("");
+
+
+  } catch (error) {
+
+    console.error(
+      "Error cargando historial:",
+      error
+    );
+
+
+    container.innerHTML =
+      '<div class="history-empty">No se pudo cargar el historial. Revisa Firebase y las reglas de Firestore.</div>';
 
   }
-);
 
+}
 
-// ================================
-// MENSAJES
-// ================================
 
 function showToast(message) {
 
@@ -988,7 +969,6 @@ function showToast(message) {
     "show"
   );
 
-
   clearTimeout(
     showToast.timer
   );
@@ -996,22 +976,15 @@ function showToast(message) {
 
   showToast.timer =
     setTimeout(
-      () => {
-
+      () =>
         toast.classList.remove(
           "show"
-        );
-
-      },
-      3500
+        ),
+      3200
     );
 
 }
 
-
-// ================================
-// INICIALIZAR
-// ================================
 
 renderChecklist();
 
