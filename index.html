@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control de Carrocería</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+    <div>
+      <div class="stellantis-wordmark">STELLANTIS</div>
+      <div class="eyebrow">CONTROL DE CALIDAD</div>
+      <h1>Carrocería</h1>
+    </div>
+    <div class="status-pill neutral" id="headerStatus">SIN INSPECCIÓN</div>
+    </header>
+
+    <main>
+      <section id="homeScreen" class="screen active">
+        <div class="hero">
+          <span class="hero-badge">INSPECCIÓN DE VEHÍCULOS</span>
+          <h2>¿Qué quieres hacer?</h2>
+          <p>Registra una nueva revisión o consulta el historial de inspecciones.</p>
+        </div>
+
+        <div class="home-grid">
+          <button class="menu-card primary-card" id="newInspectionBtn">
+            <span class="menu-visual b10-visual"><img src="b10-visual.jpeg" alt="B10"></span>
+            <span class="menu-content">
+              <span class="menu-icon">✓</span>
+              <span class="menu-title">CARROCERÍA NUEVA</span>
+              <span class="menu-description">Iniciar una nueva inspección</span>
+            </span>
+          </button>
+
+          <button class="menu-card" id="historyBtn">
+            <span class="menu-visual"><img src="historial-visual.jpg" alt="Historial"></span>
+            <span class="menu-content">
+              <span class="menu-icon">▤</span>
+              <span class="menu-title">HISTORIAL</span>
+              <span class="menu-description">Consultar inspecciones realizadas</span>
+            </span>
+          </button>
+
+          <button class="menu-card" id="defectsAnalysisBtn">
+            <span class="menu-visual"><img src="analisis-visual.jpg" alt="Análisis de defectos"></span>
+            <span class="menu-content">
+              <span class="menu-icon">▥</span>
+              <span class="menu-title">ANÁLISIS DE DEFECTOS</span>
+              <span class="menu-description">Consultar la frecuencia de los defectos detectados</span>
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <section id="analysisScreen" class="screen">
+        <div class="section-header">
+          <button class="back-btn" id="backAnalysisBtn">← Volver</button>
+          <div>
+            <div class="eyebrow">ANÁLISIS</div>
+            <h2>Análisis de defectos</h2>
+          </div>
+        </div>
+
+        <section class="dashboard-card" id="defectsDashboard">
+          <div class="dashboard-header">
+            <div>
+              <div class="eyebrow">ANÁLISIS DE DEFECTOS</div>
+              <h3>Defectos detectados</h3>
+              <p>Cuenta cuántas veces aparece cada defecto en las inspecciones guardadas.</p>
+            </div>
+            <div class="dashboard-filter">
+              <label for="dashboardDateFilter">Periodo</label>
+              <select id="dashboardDateFilter">
+                <option value="">GENERAL</option>
+              </select>
+            </div>
+          </div>
+          <div class="dashboard-stats">
+            <div class="dashboard-stat">
+              <span>COCHES INSPECCIONADOS</span>
+              <strong id="dashboardCarsCount">0</strong>
+            </div>
+            <div class="dashboard-stat">
+              <span>DEFECTOS DETECTADOS</span>
+              <strong id="dashboardDefectsCount">0</strong>
+            </div>
+          </div>
+          <div class="defect-chart-wrap">
+            <div id="defectChart" class="defect-chart" aria-live="polite"></div>
+          </div>
+        </section>
+
+      </section>
+
+      <section id="inspectionScreen" class="screen">
+        <div class="section-header">
+          <button class="back-btn" id="backHomeBtn">← Volver</button>
+          <div>
+            <div class="eyebrow">NUEVA INSPECCIÓN</div>
+            <h2>Control de carrocería</h2>
+          </div>
+        </div>
+
+        <form id="inspectionForm" novalidate>
+          <div class="vehicle-card">
+            <label for="vehicleNumber">Número de vehículo <span>*</span></label>
+            <div class="vehicle-input-row">
+              <input
+                id="vehicleNumber"
+                name="vehicleNumber"
+                type="text"
+                inputmode="numeric"
+                maxlength="6"
+                placeholder="000000"
+                autocomplete="off"
+                required
+              >
+              <div class="vehicle-valid" id="vehicleValid">6 DÍGITOS</div>
+            </div>
+            <p class="field-error" id="vehicleError"></p>
+          </div>
+
+          <div class="inspection-summary">
+            <div>
+              <span class="summary-label">Estado de inspección</span>
+              <strong id="overallStatusText">PENDIENTE</strong>
+            </div>
+            <div class="progress-wrap">
+              <span id="progressText">0 / 8</span>
+              <div class="progress-bar"><div id="progressBar"></div></div>
+            </div>
+          </div>
+
+          <div class="control-admin-bar">
+            <div>
+              <span class="summary-label">Controles</span>
+              <span class="control-admin-note">Opciones protegidas por contraseña</span>
+            </div>
+            <div class="control-admin-actions">
+              <button type="button" class="control-admin-btn add-control-btn" id="addControlBtn">PONER CONTROL</button>
+              <button type="button" class="control-admin-btn remove-control-btn" id="removeControlBtn">QUITAR CONTROL</button>
+            </div>
+          </div>
+
+          <div id="checklist" class="checklist"></div>
+
+          <div class="form-actions">
+            <button type="button" class="secondary-btn" id="cancelBtn">Cancelar</button>
+            <button type="submit" class="save-btn" id="saveBtn" disabled>Guardar inspección</button>
+          </div>
+        </form>
+      </section>
+      <div class="control-modal" id="addControlModal" aria-hidden="true">
+        <div class="control-modal-card">
+          <div class="eyebrow">NUEVO CONTROL</div>
+          <h3>Añadir control</h3>
+          <p>Añade un nuevo PUNTO de inspección y, si quieres, hasta 5 opciones para indicar por qué es NOK.</p>
+          <label for="newControlTitle">Nombre del control</label>
+          <input id="newControlTitle" type="text" placeholder="Ejemplo: VIGA" autocomplete="off">
+          <div class="new-control-options">
+            <label>Opciones NOK (rellena solo las que necesites)</label>
+            <div class="new-control-options-grid">
+            <input class="new-control-option" type="text" placeholder="Opción 1">
+            <input class="new-control-option" type="text" placeholder="Opción 2">
+            <input class="new-control-option" type="text" placeholder="Opción 3">
+            <input class="new-control-option" type="text" placeholder="Opción 4">
+            <input class="new-control-option" type="text" placeholder="Opción 5">
+            </div>
+          </div>
+          <div class="control-modal-actions">
+            <button type="button" class="secondary-btn" id="cancelAddControlBtn">Cancelar</button>
+            <button type="button" class="save-btn modal-save-btn" id="saveNewControlBtn">Añadir control</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-modal" id="removeControlModal" aria-hidden="true">
+        <div class="control-modal-card">
+          <div class="eyebrow">QUITAR CONTROL</div>
+          <h3>Selecciona un control activo</h3>
+          <p>Aquí aparecen TODOS los puntos/controles activos de la inspección. Puedes quitar cualquiera de ellos.</p>
+          <label for="removeControlSelect">Control activo</label>
+          <select id="removeControlSelect"></select>
+          <div class="control-modal-actions">
+            <button type="button" class="secondary-btn" id="cancelRemoveControlBtn">Cancelar</button>
+            <button type="button" class="control-admin-btn remove-control-btn" id="confirmRemoveControlBtn">Quitar control</button>
+          </div>
+        </div>
+      </div>
+
+      <section id="historyScreen" class="screen">
+        <div class="section-header">
+          <button class="back-btn" id="backHistoryBtn">← Volver</button>
+          <div>
+            <div class="eyebrow">CONSULTA</div>
+            <h2>Historial</h2>
+          </div>
+        </div>
+
+        <div class="history-filters">
+          <div class="history-filter-field">
+            <label for="historyDateFilter">Filtrar por día</label>
+            <select id="historyDateFilter">
+              <option value="">Todos los días</option>
+            </select>
+          </div>
+
+          <div class="history-filter-field history-search-field">
+            <label for="historyVehicleSearch">Buscar número BDG</label>
+            <input
+              id="historyVehicleSearch"
+              type="text"
+              inputmode="numeric"
+              placeholder="Escribe el número BDG..."
+              autocomplete="off"
+            >
+          </div>
+
+          <button type="button" class="history-clear-btn" id="clearHistoryFilters">
+            Limpiar filtros
+          </button>
+        </div>
+
+        <div id="historyVehicleCount" class="history-vehicle-count" aria-live="polite">
+          <span class="history-vehicle-count-label">Carrocerías enviadas</span>
+          <strong>0</strong>
+        </div>
+
+        <div id="historyList" class="history-list">
+          <div class="history-empty">
+            <div class="empty-icon">▤</div>
+            <h3>Cargando historial...</h3>
+          </div>
+        </div>
+      </section>
+
+      <div id="toast" class="toast" role="status"></div>
+    </main>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
